@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-50 text-gray-800 font-sans;
+}
+
+.container {
+  @apply max-w-3xl mx-auto p-6;
+}
+
+/* ヘッディング */
+h1 {
+  @apply text-3xl font-bold text-gray-900 mb-6;
+}
+
+/* フォーム */
+input[type="text"],
+textarea {
+  @apply w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* ボタン */
+.primary-button {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm;
+}
+
+.secondary-button {
+  @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md;
+}
+
+.delete-button {
+  @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md shadow-sm;
+}
+
+
+/* タスクリスト */
+ul {
+  @apply list-none p-0;
+}
+
+li {
+  @apply bg-white rounded-lg shadow-md p-4 mb-3 flex items-center justify-between;
+}
+
+li.completed {
+  @apply opacity-50 line-through text-gray-500;
+}
+
+/* タスク詳細 */
+.modal-overlay {
+  @apply fixed inset-0 bg-gray-600 opacity-75;
+}
+
+.modal-container {
+  @apply fixed inset-0 flex items-center justify-center z-50;
+}
+
+.modal-content {
+  @apply bg-white w-11/12 md:max-w-md mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-6;
+}
+
+/* 設定ボタン */
+.setting-button {
+  @apply bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md; 
+}
+
+/* 削除ボタン */
+.delete-button {
+  @apply bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded;
+}
