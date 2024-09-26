@@ -1,6 +1,7 @@
 "use client";
-import Todo from "../components/Todo";
-import { useTasks } from "../hooks/useTask";
+
+import Todo from "../../../components/Todo";
+import { useTasks } from "../../../hooks/useTask";
 
 export default function Demo() {
   const {
