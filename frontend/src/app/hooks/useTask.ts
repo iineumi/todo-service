@@ -1,85 +1,105 @@
-import { useEffect, useState } from "react";
-import initialData from '../demo/init.json';
 import { Task } from "@/models/Task";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-export function useTasks() {
+export const useTasks = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    // ローカルストレージからタスクを読み込む
+    const TasksApiPath = "/api/tasks"
+
     useEffect(() => {
-        const storedTasks = localStorage.getItem('tasks');
-        if (storedTasks) {
-            try {
-                const parsedTasks: Task[] = JSON.parse(storedTasks);
-                setTasks(parsedTasks);
-            } catch (error) {
-                console.error("localStorage からのデータ読み込みに失敗しました:", error);
-                localStorage.removeItem('tasks');
-                localStorage.setItem('tasks', JSON.stringify(initialData));
-                setTasks(initialData);
-            }
-        } else {
-            localStorage.setItem('tasks', JSON.stringify(initialData));
-            setTasks(initialData);
-            console.log("タスクの初期データがロードされました");
-        }
+        const fetchTasks = async () => {
+            const res = await fetch(TasksApiPath);
+            const data = await res.json();
+            setTasks(data);
+        };
+
+        fetchTasks();
     }, []);
 
     const handleAddTask = async (newTask: Task): Promise<void> => {
         try {
-            newTask.completed = false;
-            setTasks([...tasks, newTask]);
-            localStorage.setItem('tasks', JSON.stringify([...tasks, newTask]));
+            const response = await fetch(TasksApiPath, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newTask),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setTasks([...tasks, data]);
+            } else {
+                console.error("タスクの追加に失敗しました。", response.status);
+            }
         } catch (error) {
-            const typedError = error as string
-            setError(typedError || "タスクの追加中にエラーが発生しました。");
+            console.error("タスクの追加中にエラーが発生しました。", error);
+            buildSetError(setError, "タスクの追加中にエラーが発生しました。", error)
         }
     };
 
     const handleUpdateTask = async (updatedTask: Task): Promise<void> => {
         try {
-            setTasks(prevTasks => {
-                const updatedTasks = prevTasks.map(task =>
-                    task.id === updatedTask.id ? updatedTask : task
-                );
-                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-                return updatedTasks;
+            const response = await fetch(`${TasksApiPath}/${updatedTask.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedTask),
             });
+
+            if (response.ok) {
+                console.log("タスクの更新に成功しました");
+                const updatedData = await response.json();
+                setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedData : t)));
+            } else {
+                console.error("タスクの更新に失敗しました。", response.status);
+            }
         } catch (error) {
-            const typedError = error as string
-            setError(typedError || "タスクの更新中にエラーが発生しました。");
+            console.error("タスクの更新中にエラーが発生しました。", error);
+            buildSetError(setError, "タスクの追加中にエラーが発生しました。", error)
         }
     };
 
     const handleToggleComplete = async (taskId: string): Promise<void> => {
         try {
-            setTasks(prevTasks => {
-                const updatedTasks = prevTasks.map(task => {
-                    if (task.id === taskId) {
-                        return { ...task, completed: !task.completed };
-                    }
-                    return task;
-                });
-                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-                return updatedTasks;
-            });
+            const taskToUpdate = tasks.find((task) => task.id === taskId);
+            if (!taskToUpdate) {
+                console.error(`Task with ID ${taskId} not found.`);
+                return;
+            }
+
+            const updatedTask = {
+                ...taskToUpdate,
+                completed: !taskToUpdate.completed,
+            };
+
+            await handleUpdateTask(updatedTask);
         } catch (error) {
-            const typedError = error as string
-            setError(typedError || "タスクの更新中にエラーが発生しました。");
+            console.error("タスクの更新中にエラーが発生しました。", error);
+            buildSetError(setError, "タスクの更新中にエラーが発生しました。", error)
+
         }
     };
 
     const handleDeleteTask = async (taskId: string): Promise<void> => {
         try {
-            setTasks((prevTasks) => {
-                const updatedTasks = prevTasks.filter(task => task.id !== taskId);
-                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-                return updatedTasks;
-            });
+            const taskToUpdate = tasks.find((task) => task.id === taskId);
+            if (!taskToUpdate) {
+                console.error(`Task with ID ${taskId} not found.`);
+                return;
+            }
+
+            const updatedTask = {
+                ...taskToUpdate,
+                isArchived: !taskToUpdate.isArchived,
+            };
+
+            await handleUpdateTask(updatedTask);
         } catch (error) {
-            const typedError = error as string
-            setError(typedError || "タスクの削除中にエラーが発生しました。");
+            console.error("タスクの削除中にエラーが発生しました。", error);
+            buildSetError(setError, "タスクの削除中にエラーが発生しました。", error)
         }
     };
 
@@ -92,3 +112,8 @@ export function useTasks() {
         handleDeleteTask,
     };
 };
+
+function buildSetError(setError: Dispatch<SetStateAction<string | null>>, message: string, error: any) {
+    const typedError = error as string
+    return setError(typedError || message);
+}
